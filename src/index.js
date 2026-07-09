@@ -23,7 +23,7 @@ const client = new Client({
 });
 
 const SUPPORTED_EXTENSIONS = ["png", "jpg", "jpeg", "gif", "webp"];
-const PIXEL_BLOCK_SIZE = 12; // 1ブロックあたりのピクセル数（大きいほど粗いモザイクになる）
+const TARGET_BLOCKS = 32; // 長辺を何ブロックに分割するか（小さいほど粗いモザイクになる）
 
 client.on("messageCreate", async (message) => {
   if (message.author.bot) return;
@@ -36,8 +36,10 @@ client.on("messageCreate", async (message) => {
       const image = await Jimp.read(attachment.url);
       const { width, height } = image.bitmap;
 
-      const smallW = Math.max(1, Math.floor(width / PIXEL_BLOCK_SIZE));
-      const smallH = Math.max(1, Math.floor(height / PIXEL_BLOCK_SIZE));
+      // 元画像の解像度に関わらず、長辺が必ずTARGET_BLOCKS個のブロックになるように縮小サイズを決める
+      const scale = TARGET_BLOCKS / Math.max(width, height);
+      const smallW = Math.max(1, Math.round(width * scale));
+      const smallH = Math.max(1, Math.round(height * scale));
 
       image
         .resize({ w: smallW, h: smallH }) // 一度小さく縮小
